@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  commits:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Lint pull request commits
+        if: github.event_name == 'pull_request'
+        run: npx --no -- commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+      - name: Lint pushed or dispatched commit
+        if: github.event_name != 'pull_request'
+        run: npx --no -- commitlint --last --verbose
+      - name: Validate pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | npx --no -- commitlint --verbose
+
+  quality:
+    name: Quality checks (Node ${{ matrix.node }}, Vite ${{ matrix.vite }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24, 26]
+        vite: [7, 8]
+        os: [ubuntu-latest]
+        include:
+          - node: 24
+            vite: 7
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Install the Vite compatibility target
+        if: matrix.vite == 7
+        run: npm install --no-save --package-lock=false vite@7
+      - run: npm run check
+
+  gate:
+    name: Quality gate
+    if: always()
+    needs: [commits, quality]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all checks to pass
+        env:
+          COMMIT_RESULT: ${{ needs.commits.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        run: test "$COMMIT_RESULT" = success && test "$QUALITY_RESULT" = success

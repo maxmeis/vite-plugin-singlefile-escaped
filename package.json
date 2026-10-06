@@ -1,30 +1,73 @@
 {
   "name": "vite-plugin-singlefile-escaped",
   "version": "1.1.7",
-  "homepage": "https://github.com/runmaxde/vite-plugin-singlefile-escaped",
+  "homepage": "https://github.com/maxmeis/vite-plugin-singlefile-escaped",
   "repository": {
     "type": "git",
-    "url": "https://github.com/runmaxde/vite-plugin-singlefile-escaped"
+    "url": "https://github.com/maxmeis/vite-plugin-singlefile-escaped.git"
   },
   "bugs": {
-    "url": "https://github.com/runmaxde/vite-plugin-singlefile-escaped/issues"
+    "url": "https://github.com/maxmeis/vite-plugin-singlefile-escaped/issues"
   },
-  "description": "",
-  "main": "index.js",
+  "description": "Escape the HTML output from vite-plugin-singlefile for embedding in generated code.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "peerDependencies": {
+    "vite": "^7.0.0 || ^8.0.0"
+  },
   "scripts": {
-    "test": "echo Hello World!"
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage",
+    "build": "node scripts/build.mjs",
+    "test": "npm run test:coverage",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run package:smoke",
+    "package:smoke": "node scripts/package-smoke.mjs",
+    "prepack": "npm run build",
+    "prepare": "husky"
   },
   "keywords": [
     "vite",
     "inline",
     "single-file",
     "vite-plugin",
-    "excape-string"
+    "escaped-string"
   ],
-  "author": "runmaxde",
+  "author": "maxmeis",
   "license": "ISC",
   "dependencies": {
     "jsesc": "^3.0.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "@types/jsesc": "^3.0.3",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.3",
+    "eslint": "^10.12.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.3",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.3"
   },
   "type": "module"
 }
