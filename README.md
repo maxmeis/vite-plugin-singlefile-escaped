@@ -48,7 +48,7 @@ The package includes TypeScript declarations. See the exported function's type f
 
 ## Development and releases
 
-Run `npm ci`, then `npm run check` to audit dependencies, format-check, lint, typecheck, build, and run tests with 100% coverage thresholds. `npm run package:smoke` verifies the packed package can be consumed. Pull requests run these checks on Node.js 22, 24, and 26, plus Windows on Node.js 24.
+Run `npm ci`, then `npm run check` to audit dependencies, check formatting, lint, typecheck, build, and run tests with 100% coverage thresholds. `npm run package:smoke` verifies the packed package can be consumed. Pull requests run the full check once on Node.js 24 with locked Vite 8, then run typechecking and tests with Vite 7 for compatibility.
 
 The development lockfile uses a temporary, narrowly scoped matcher override; see [Contributing](CONTRIBUTING.md#temporary-development-dependency-override) for its rationale and removal condition.
 

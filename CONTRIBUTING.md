@@ -9,8 +9,8 @@ npm run check
 ```
 
 The check command audits dependencies, checks formatting, lints the code, typechecks it, builds the
-package, and runs tests with 100% coverage thresholds. Pull requests also run checks on supported
-Node.js versions and Windows.
+package, and runs tests with 100% coverage thresholds. Pull requests run this full check once on
+Node.js 24 with locked Vite 8, then run only typechecking and tests with Vite 7 for compatibility.
 
 ## Temporary development dependency override
 
