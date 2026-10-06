@@ -41,8 +41,7 @@ pushes to protected branches are blocked.
 ## Releases
 
 Release Please opens a version and changelog pull request from conventional commits on `main`. The
-first migration release is pinned to `2.0.0`; remove the `release-as` override from
-`.github/release-please-config.json` after that release is published.
+migration's breaking Conventional Commit makes the next release `2.0.0`.
 Merging that release pull request creates a version tag; the release workflow validates that tag
 and publishes the package with npm trusted publishing. Before the first release, an npm maintainer
 must add a trusted publisher in the npm package settings with provider **GitHub Actions**, owner
