@@ -48,7 +48,9 @@ The package includes TypeScript declarations. See the exported function's type f
 
 ## Development and releases
 
-Run `npm ci`, then `npm run check` to format-check, lint, typecheck, build, and run tests with 100% coverage thresholds. `npm run package:smoke` verifies the packed package can be consumed. Pull requests run these checks on Node.js 22, 24, and 26, plus Windows on Node.js 24.
+Run `npm ci`, then `npm run check` to audit dependencies, format-check, lint, typecheck, build, and run tests with 100% coverage thresholds. `npm run package:smoke` verifies the packed package can be consumed. Pull requests run these checks on Node.js 22, 24, and 26, plus Windows on Node.js 24.
+
+The development lockfile uses a temporary, narrowly scoped matcher override; see [Contributing](CONTRIBUTING.md#temporary-development-dependency-override) for its rationale and removal condition.
 
 Commits use [Conventional Commits](https://www.conventionalcommits.org/). Release Please uses those messages to propose version and changelog updates; merging the release pull request creates a tag and triggers the validated npm publish workflow.
 

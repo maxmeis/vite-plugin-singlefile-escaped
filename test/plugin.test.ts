@@ -1,4 +1,5 @@
 import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from 'vite';
@@ -7,6 +8,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Plugin } from 'vite';
 import jsesc from 'jsesc';
 import viteSingleFileEscaped from '../src/index.js';
+
+const require = createRequire(import.meta.url);
+const singlefileRequire = createRequire(require.resolve('vite-plugin-singlefile'));
+const inlineMatcher = singlefileRequire('micromatch') as {
+  isMatch: (fileName: string, patterns: string[]) => boolean;
+};
 
 function run(
   bundle: Record<string, unknown>,
@@ -23,6 +30,20 @@ function run(
 }
 
 describe('viteSingleFileEscaped', () => {
+  it('preserves vite-plugin-singlefile inlinePattern matching and exclusions', () => {
+    expect(inlineMatcher.isMatch('assets/main.js', ['**/*.{js,css}'])).toBe(true);
+    expect(inlineMatcher.isMatch('assets/style.css', ['**/*.{js,css}'])).toBe(true);
+    expect(inlineMatcher.isMatch('assets/legacy.mjs', ['**/*.@(mjs|cjs)'])).toBe(true);
+    expect(inlineMatcher.isMatch('assets/image.png', ['**/*.{js,css}', '**/*.@(mjs|cjs)'])).toBe(
+      false,
+    );
+  });
+
+  it('handles deeply nested brace patterns without throwing a RangeError', () => {
+    const deeplyNestedPattern = `${'{'.repeat(8_000)}x${'}'.repeat(8_000)}`;
+    expect(() => inlineMatcher.isMatch('assets/main.js', [deeplyNestedPattern])).not.toThrow();
+  });
+
   it('is a post plugin and escapes a string HTML asset once', () => {
     const bundle: Record<string, unknown> = {
       'index.html': {
@@ -148,7 +169,10 @@ describe('viteSingleFileEscaped', () => {
         configFile: false,
         root,
         logLevel: 'silent',
-        plugins: [viteSingleFile(), viteSingleFileEscaped('<wrapped>', '</wrapped>')],
+        plugins: [
+          viteSingleFile({ inlinePattern: ['**/*.{js,css}'] }),
+          viteSingleFileEscaped('<wrapped>', '</wrapped>'),
+        ],
         build: { outDir, emptyOutDir: true },
       });
 
@@ -161,7 +185,10 @@ describe('viteSingleFileEscaped', () => {
         configFile: false,
         root,
         logLevel: 'silent',
-        plugins: [viteSingleFile(), viteSingleFileEscaped('<wrapped>', '</wrapped>')],
+        plugins: [
+          viteSingleFile({ inlinePattern: ['**/*.{js,css}'] }),
+          viteSingleFileEscaped('<wrapped>', '</wrapped>'),
+        ],
         build: { outDir: join(root, 'memory-output'), write: false },
       });
       const outputBundle = Array.isArray(inMemory) ? inMemory[0] : inMemory;
@@ -172,6 +199,30 @@ describe('viteSingleFileEscaped', () => {
       expect(html?.type).toBe('asset');
       if (html?.type === 'asset') {
         expect(html.source).toBe(`<wrapped>${jsesc(baseline)}</wrapped>`);
+      }
+
+      const filteredBuild = await build({
+        configFile: false,
+        root,
+        logLevel: 'silent',
+        plugins: [
+          viteSingleFile({ inlinePattern: ['**/*.js'] }),
+          viteSingleFileEscaped('<wrapped>', '</wrapped>'),
+        ],
+        build: { outDir: join(root, 'filtered-output'), write: false },
+      });
+      const filteredBundle = Array.isArray(filteredBuild) ? filteredBuild[0] : filteredBuild;
+      if (!filteredBundle || !('output' in filteredBundle)) {
+        throw new Error('Expected a filtered build output');
+      }
+      const filteredHtml = filteredBundle?.output.find(
+        (item) => item.type === 'asset' && item.fileName === 'index.html',
+      );
+      expect(filteredHtml?.type).toBe('asset');
+      if (filteredHtml?.type === 'asset') {
+        expect(filteredHtml.source).toContain('style-');
+        expect(filteredHtml.source).toContain('.css');
+        expect(filteredHtml.source).toContain('document.body.dataset.value');
       }
     } finally {
       await rm(root, { recursive: true, force: true });

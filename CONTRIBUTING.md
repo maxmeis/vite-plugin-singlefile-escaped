@@ -8,17 +8,21 @@ Install the locked dependencies with `npm ci`. Before opening a pull request, ru
 npm run check
 ```
 
-The check command checks formatting, lints the code, typechecks it, builds the package, and runs tests
-with 100% coverage thresholds. Pull requests also run checks on supported Node.js versions and
-Windows.
+The check command audits dependencies, checks formatting, lints the code, typechecks it, builds the
+package, and runs tests with 100% coverage thresholds. Pull requests also run checks on supported
+Node.js versions and Windows.
 
-## Known development dependency advisory
+## Temporary development dependency override
 
-`npm audit` currently reports three high-severity findings through the development-only chain
-`vite-plugin-singlefile@2.3.3` → `micromatch` → `braces`, related to
-[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). `npm audit --omit=dev` is
-clean. No compatible patch is available yet; do not downgrade `vite-plugin-singlefile` to the
-audit-suggested 0.9.0 release, which is incompatible with this project.
+The lockfile scopes an override to `vite-plugin-singlefile@2.3.3`, replacing its `micromatch`
+dependency with `picomatch@4.0.7`. This removes the vulnerable `braces` dependency associated with
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). The plugin only calls
+`micromatch.isMatch` for `inlinePattern`, and that method in micromatch 4 delegates directly to
+picomatch. Tests exercise this API, including brace and extglob patterns and deeply nested input.
+Keep the version scope and exact `vite-plugin-singlefile` development dependency in sync. Remove
+the override when an upstream release no longer has the vulnerable dependency or provides a reviewed
+fixed replacement. It applies only when developing this repository; it does not change consumers'
+installations of `vite-plugin-singlefile`.
 
 ## Commit messages
 

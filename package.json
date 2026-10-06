@@ -33,10 +33,11 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "audit": "npm audit --audit-level=low --include=dev",
     "test:coverage": "vitest run --coverage",
     "build": "node scripts/build.mjs",
     "test": "npm run test:coverage",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run package:smoke",
+    "check": "npm run audit && npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run package:smoke",
     "package:smoke": "node scripts/package-smoke.mjs",
     "prepack": "npm run build",
     "prepare": "husky"
@@ -66,8 +67,13 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",
-    "vite-plugin-singlefile": "^2.3.3",
+    "vite-plugin-singlefile": "2.3.3",
     "vitest": "^5.0.3"
+  },
+  "overrides": {
+    "vite-plugin-singlefile@2.3.3": {
+      "micromatch": "npm:picomatch@4.0.7"
+    }
   },
   "type": "module"
 }
