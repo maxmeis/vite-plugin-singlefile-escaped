@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-singlefile-escaped",
-  "version": "1.1.7",
+  "version": "2.0.0",
   "homepage": "https://github.com/maxmeis/vite-plugin-singlefile-escaped",
   "repository": {
     "type": "git",
